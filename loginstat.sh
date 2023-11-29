@@ -88,8 +88,17 @@ function hhmm_to_mm() {
 
 # convert minutes to hh:mm
 function mm_to_hhmm() {
-  local hour=$(echo "scale=scale(1.1111);$1/60" | bc | cut -d "." -f 1)
-  local minute=$(echo "0.$(echo "scale=scale(1.1111);$1/60" | bc | cut -d "." -f 2)*60" | bc | cut -d "." -f 1)
+  local hour=$(echo "scale = 4;$1/60" | bc | cut -d "." -f 1)
+  local minute=$(echo "0.$(echo "scale = 4;$1/60" | bc | cut -d "." -f 2)*60" | bc | cut -d "." -f 1)
+
+  # Change hour to 0 if empty because bc doesn't print leading 0
+  if [ -z ${hour} ]; then
+    hour="0"
+  fi
+  # Same for minutes
+  if [ -z ${minute} ]; then
+    minute="0"
+  fi
 
   echo "${hour}:${minute}"
 }
@@ -107,16 +116,16 @@ function avarages() {
 
   # time per logins
   local n_logins=$(last $1 | head -n -2 | grep "([0-9][0-9]:[0-9][0-9])" | wc -l)
-  local time_per_logins=$((${total_minutes} / ${n_logins}))
-  echo -e "\nTime/Logins: $(mm_to_hhmm ${time_per_logins})"
+  local hours_per_logins=$((${total_minutes} / ${n_logins}))
+  echo -e "\nHours/Logins: $(mm_to_hhmm ${hours_per_logins})"
 
   # Logins per days
   local n_days=$(last ${1} | head -n -2 | rev | tr -s " " | cut -d " " -f 5-7 | rev | uniq | wc -l)
   echo "Logins/Days: $((n_logins / n_days))"
 
   # time per days
-  local time_per_days=$((${total_minutes} / n_days))
-  echo "Time/Days: $(mm_to_hhmm ${time_per_days})"
+  local hours_per_days=$((${total_minutes} / n_days))
+  echo "Hours/Days: $(mm_to_hhmm ${hours_per_days})"
 }
 
 parse_parameters $*
