@@ -10,6 +10,27 @@ Print login statistics for user or for a date
   -h\t\tprint this help message"
 }
 
+function nth_day_format() {
+  case "${1: -1}" in
+    1)
+      echo "${1}st"
+      ;;
+    2)
+      echo "${1}nd"
+      ;;
+    3)
+      echo "${1}rd"
+      ;;
+    *) echo "${1}th" ;;
+  esac
+}
+
+function name_of_month() {
+  local months=("January" "February" "March" "April" "May" "June" "July" "August" "September" "October" "November" "December")
+
+  echo "${months[$1 - 1]}"
+}
+
 function parse_parameters() {
   if [[ $# -lt 1 ]]; then
     echo "${script_name}: Not enough parameters"
@@ -31,22 +52,22 @@ function parse_parameters() {
 function print_for_date() {
   local username_list=$(last -p "$1 $2" | head -n -2 | tr -s " " | cut -d " " -f 1 | uniq)
 
-  local month=$(echo $1 | cut -d "-" -f 2)
-  local day=$(echo $1 | cut -d "-" -f 3)
+  local month=$(name_of_month $(echo $1 | cut -d "-" -f 2))
+  local day=$(nth_day_format $(echo $1 | cut -d "-" -f 3))
   local hour=$(echo $2 | cut -d ":" -f 1)
   local minute=$(echo $2 | cut -d ":" -f 2)
 
-  echo "On the ${day}th of ${month} at ${hour}:${minute} the following users were logged in:"
+  echo "On the ${day} of ${month} at ${hour}:${minute} the following users were logged in:"
 
   IFS=$'\n'
   for un in ${username_list}; do
-    cucc="$(grep -F "${un}" /etc/passwd | cut --output-delimiter="|" -d ":" -f 1,5 | tr "|" "\t")"
+    cucc="$(getent passwd ${un} | cut --output-delimiter="|" -d ":" -f 1,5 | tr "|" "\t")"
     echo "$cucc"
   done
 }
 
 function last_login() {
-  echo "Last Log In: $(last -an 1 "$1" | head -n -2 | tr -s " " | cut -d " " -f 4-9)"
+  echo "Last Login: $(last -an 1 "$1" | head -n -2 | tr -s " " | cut -d " " -f 4-9)"
   echo "Machine: $(last -adn1 "$1" | head -n -2 | tr -s " " | rev | cut -d " " -f 1 | rev)"
 }
 
@@ -101,13 +122,28 @@ function avarages() {
 parse_parameters $*
 
 if [[ ${param} =~ ^[0-1][0-9]:[0-3][0-9]:[0-2][0-9]:[0-6][0-9]$ ]]; then
+  # Defaulting to current year
+  year=$(date "+%Y")
   month=$(echo ${param} | cut -d ":" -f 1)
   day=$(echo ${param} | cut -d ":" -f 2)
   hour=$(echo ${param} | cut -d ":" -f 3)
   minute=$(echo ${param} | cut -d ":" -f 4)
 
-  date_string="2023-${month}-${day} ${hour}:${minute}"
+  # Formatting date for last
+  date_string="${year}-${month}-${day} ${hour}:${minute}"
 
+  # Check if date is invalid
+  last -p "${date_string}" > /dev/null 2>&1
+  if [ $? -eq 1 ]; then
+    echo "Invalid date"
+    exit 1
+  fi
+
+  # Check if there were any users logged in on that date
+  if [ $(last -p "${date_string}" | wc -l) -lt 3 ]; then
+    echo "There weren't any users logged in on that date"
+    exit 1
+  fi
   print_for_date ${date_string}
 else
   if [ $(last ${param} | wc -l) -lt 3 ]; then
