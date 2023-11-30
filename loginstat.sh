@@ -127,7 +127,7 @@ function avarages() {
   echo "Logins/Days: $((n_logins / n_days))"
 
   # time per days
-  local hours_per_days=$((${total_minutes} / n_days))
+  local hours_per_days=$((${total_minutes} / ${n_days}))
   echo "Hours/Days: $(mm_to_hhmm ${hours_per_days})"
 }
 
