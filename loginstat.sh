@@ -64,8 +64,8 @@ function print_for_date() {
 
   IFS=$'\n'
   for un in ${username_list}; do
-    cucc="$(getent passwd ${un} | cut --output-delimiter="|" -d ":" -f 1,5 | tr "|" "\t")"
-    echo "$cucc"
+    name="$(getent passwd ${un} | cut --output-delimiter="|" -d ":" -f 1,5 | tr "|" "\t")"
+    echo "${name}"
   done
 }
 
@@ -78,7 +78,7 @@ function ten_most_used() {
   local machine_list=$(last -ad "$1" | head -n -2 | rev | cut -d " " -f 1 | rev | sort | uniq -c | sort -nr | head -n 10 | tr -s " " | cut -d " " -f 3)
 
   echo -e "\n10 most used machines for logging in:"
-  echo "$machine_list"
+  echo "${machine_list}"
 }
 
 # converts hh:mm time to minutes
@@ -161,7 +161,7 @@ if [[ ${param} =~ ^[0-1][0-9]:[0-3][0-9]:[0-2][0-9]:[0-6][0-9]$ ]]; then
 # Given parameter is a username
 else
   if [ $(last ${param} | wc -l) -lt 3 ]; then
-    echo "${param} user didn't log in on this computer"
+    echo "${param} user haven't logged in on this computer yet"
     exit 1
   fi
 
