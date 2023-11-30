@@ -10,6 +10,24 @@ Print login statistics for user or for a date
   -h\t\tprint this help message"
 }
 
+function parse_parameters() {
+  if [[ $# -lt 1 ]]; then
+    echo "${script_name}: Not enough parameters"
+    echo "Try '${script_name} -h' for more information"
+    exit 1
+  fi
+  if [[ ${1:0:1} == "-" ]]; then
+    if [[ ${1:1:1} != "h" ]]; then
+      echo "${script_name}: invalid option -- '${1:1:1}'"
+      echo "Try '${script_name} -h' for more information"
+      exit 1
+    else
+      print_help
+      exit 0
+    fi
+  fi
+}
+
 # Input: n(umber) Output: nth
 function nth_day_format() {
   case "${1: -1}" in
@@ -32,24 +50,6 @@ function name_of_month() {
   local months=("January" "February" "March" "April" "May" "June" "July" "August" "September" "October" "November" "December")
 
   echo "${months[$1 - 1]}"
-}
-
-function parse_parameters() {
-  if [[ $# -lt 1 ]]; then
-    echo "${script_name}: Not enough parameters"
-    echo "Try '${script_name} -h' for more information"
-    exit 1
-  fi
-  if [[ ${1:0:1} == "-" ]]; then
-    if [[ ${1:1:1} != "h" ]]; then
-      echo "${script_name}: invalid option -- '${1:1:1}'"
-      echo "Try '${script_name} -h' for more information"
-      exit 1
-    else
-      print_help
-      exit 0
-    fi
-  fi
 }
 
 function print_for_date() {
@@ -82,6 +82,7 @@ function ten_most_used() {
 }
 
 # converts hh:mm time to minutes
+# Input: "hh:mm" Output: number
 function hhmm_to_mm() {
   local hour=$(echo $1 | cut -d ":" -f 1)
   local minute=$(echo $1 | cut -d ":" -f 2)
@@ -90,6 +91,7 @@ function hhmm_to_mm() {
 }
 
 # convert minutes to hh:mm
+# Input: number Output: "hh:mm"
 function mm_to_hhmm() {
   local hour=$(echo "scale = 4;$1/60" | bc | cut -d "." -f 1)
   local minute=$(echo "0.$(echo "scale = 4;$1/60" | bc | cut -d "." -f 2)*60" | bc | cut -d "." -f 1)
@@ -131,6 +133,7 @@ function avarages() {
   echo "Hours/Days: $(mm_to_hhmm ${hours_per_days})"
 }
 
+# Fisrt check if help was requested
 parse_parameters $*
 
 # Given parameter is a date
