@@ -10,6 +10,7 @@ Print login statistics for user or for a date
   -h\t\tprint this help message"
 }
 
+# Input: n(umber) Output: nth
 function nth_day_format() {
   case "${1: -1}" in
     1)
@@ -25,6 +26,8 @@ function nth_day_format() {
   esac
 }
 
+# Convert month number to month name
+# Input: number Output: month_name
 function name_of_month() {
   local months=("January" "February" "March" "April" "May" "June" "July" "August" "September" "October" "November" "December")
 
@@ -130,6 +133,7 @@ function avarages() {
 
 parse_parameters $*
 
+# Given parameter is a date
 if [[ ${param} =~ ^[0-1][0-9]:[0-3][0-9]:[0-2][0-9]:[0-6][0-9]$ ]]; then
   # Defaulting to current year
   year=$(date "+%Y")
@@ -154,6 +158,7 @@ if [[ ${param} =~ ^[0-1][0-9]:[0-3][0-9]:[0-2][0-9]:[0-6][0-9]$ ]]; then
     exit 1
   fi
   print_for_date ${date_string}
+# Given parameter is a username
 else
   if [ $(last ${param} | wc -l) -lt 3 ]; then
     echo "${param} user didn't log in on this computer"
